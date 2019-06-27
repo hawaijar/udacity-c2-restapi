@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { FeedItem } from '../models/FeedItem';
 import { requireAuth } from '../../users/routes/auth.router';
 import * as AWS from '../../../../aws';
+import { where } from 'sequelize/types';
 
 const router: Router = Router();
 
@@ -28,8 +29,22 @@ router.get('/:id',
 router.patch('/:id', 
     requireAuth, 
     async (req: Request, res: Response) => {
-        //@TODO try it yourself
-        res.send(500).send("not implemented")
+        const {caption, url} = req.body;
+        if(!caption && !url) {
+            res.status(400).send("Url & Caption are found empty");
+        }
+        const { id } = req.params;
+        let item = await FeedItem.findByPk(id);
+        if(caption) {
+            item.caption = caption;
+        }
+        if(url) {
+            item.url = url;
+        }
+
+        const updated_item = await FeedItem.update({...item}, {where: {id:id}});
+        res.status(200).send(updated_item)
+        
 });
 
 
